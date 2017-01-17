@@ -12,6 +12,7 @@ var (
 	configFile      = flag.String("c", "etc/conf.yaml", "配置文件，默认etc/conf.yaml")
 	dbPath          = flag.String("db", "level.db", "database path")
 	callbackworkers = flag.Int("cw", runtime.NumCPU(), "callback并发数，默认是cpu数")
+	trycallnums     = flag.Int("cn", 10, "callback失败重试次数")
 	sms             *SMS
 	SMSModel        *Model
 )
@@ -19,7 +20,7 @@ var (
 func init() {
 
 	flag.Usage = func() {
-		fmt.Printf("Usage %s -c=etc/conf.yaml -db level.db -cw 10", os.Args[0])
+		fmt.Printf("Usage %s -c=etc/conf.yaml -db level.db -cw 10 -cn 10", os.Args[0])
 		flag.PrintDefaults()
 	}
 	flag.Parse()

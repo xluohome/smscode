@@ -45,12 +45,12 @@ func (c Callback) Do(cbs <-chan Callback) {
 	for cb := range cbs {
 
 		go func() {
-			//延时 2,4,6,8,16,32,64,128 ... s  最多10次
+			//延时 2,4,6,8,16,32,64,128 ... 秒
 			<-time.After(time.Duration(1<<cb.callnums) * time.Second)
 
 			res, err := http.PostForm(cb.Url, cb.Data)
 			if err != nil {
-				log.Errorf("%s:%v,%s", "http.PostForm发生了错误。", cb, err.Error())
+				log.Errorf("http.PostForm发生了错误:%v,%s", cb, err.Error())
 				return
 			}
 			defer res.Body.Close()
@@ -59,8 +59,8 @@ func (c Callback) Do(cbs <-chan Callback) {
 			if res.StatusCode == http.StatusOK {
 				return
 			}
-			if cb.callnums > 10 {
-				log.Errorf("%s，%+v", "重试8次callback均失败。", cb)
+			if cb.callnums > trycallnums {
+				log.Errorf("重试%d次callback均失败:%v", trycallnums, cb)
 				return
 			}
 

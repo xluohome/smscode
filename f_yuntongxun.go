@@ -9,10 +9,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	log "github.com/golang/glog"
-
-	"strings"
 )
 
 type Yuntongxun struct {
@@ -37,16 +36,11 @@ func (y *Yuntongxun) Send() error {
 	if err != nil {
 		return err
 	}
-
-	//请求body
 	body := bytes.NewReader(b)
 	req, err := http.NewRequest("POST", y.url(), body)
 	if err != nil {
 		return err
 	}
-
-	// 生成包头
-	// $header = array("Accept:application/$this->BodyType","Content-Type:application/$this->BodyType;charset=utf-8","Authorization:$authen");
 
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json")
@@ -79,7 +73,6 @@ func (y *Yuntongxun) url() string {
 }
 
 func (y *Yuntongxun) sig() string {
-	// $sig =  strtoupper(md5($this->AccountSid . $this->AccountToken . $this->Batch))
 	var buf bytes.Buffer
 	buf.WriteString(config.Vendors["yuntongxun"]["AccountSid"])
 	buf.WriteString(config.Vendors["yuntongxun"]["AccountToken"])
@@ -93,14 +86,10 @@ func (y *Yuntongxun) sig() string {
 }
 
 func (y *Yuntongxun) body() ([]byte, error) {
-
 	var datas = []string{y.sms.Code, fmt.Sprintf("%d", y.sms.Config.Validtime/60)} //单位是分钟
 	var fd = formdata{y.sms.Mobile, y.sms.Config.Tpl, config.Vendors["yuntongxun"]["AppId"], datas}
-	body, err := json.Marshal(fd)
-	if err != nil {
-		return []byte{}, err
-	}
-	return body, nil
+
+	return json.Marshal(fd)
 }
 
 // 生成授权：主帐户Id + 英文冒号 + 时间戳。
@@ -109,6 +98,5 @@ func (y *Yuntongxun) authen() string {
 	buf.WriteString(config.Vendors["yuntongxun"]["AccountSid"])
 	buf.WriteByte(':')
 	buf.WriteString(y.sms.NowTime.Format("20060102150405"))
-
 	return base64.URLEncoding.EncodeToString(buf.Bytes())
 }

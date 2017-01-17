@@ -39,14 +39,6 @@ func sendcode(sms *SMS) error {
 		log.Fatal("您设置的短信服务商有误")
 	}
 
-	if err := VailMobile(sms.Mobile); err != nil {
-		return err
-	}
-
-	if err := VailCode(sms.Code); err != nil {
-		return err
-	}
-
 	return s.Send()
 }
 

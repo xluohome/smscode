@@ -13,7 +13,10 @@ func TestYuntongxun(t *testing.T) {
 	sms.Code = "888888"
 	sms.Mobile = "13575566313"
 
-	//var y = &Yuntongxun{sms: sms}
+	var y = &Yuntongxun{sms: sms}
 
-	//y.Send()
+	if err := y.Send(); err != nil {
+		t.Error(err)
+	}
+
 }
