@@ -22,24 +22,22 @@ type Model struct {
 	db  *leveldb.DB
 }
 
-func NewModel(sms *SMS) *Model {
+var db *leveldb.DB
 
-	once.Do(func() {
+func init_db() {
+	var err error
+	var opt = &opt.Options{BlockCacheCapacity: cacheSize,
+		WriteBuffer: writeBuffer * 1024 * 1024}
+	db, err = leveldb.OpenFile(*dbPath, opt)
+	if err != nil {
+		log.Fatalln("db.Get(), err:", err)
+	}
+}
 
-		var opt = &opt.Options{BlockCacheCapacity: cacheSize,
-			WriteBuffer: writeBuffer * 1024 * 1024}
-		db, err := leveldb.OpenFile(*dbPath, opt)
-		if err != nil {
-			log.Fatalln("db.Get(), err:", err)
-		}
-
-		SMSModel = &Model{db: db}
-
-	})
-
+func NewModel(sms *SMS) (SMSModel *Model) {
+	SMSModel = &Model{db: db}
 	SMSModel.sms = sms
-
-	return SMSModel
+	return
 }
 
 func (m *Model) GetMobileArea() (string, error) {

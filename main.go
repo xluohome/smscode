@@ -12,9 +12,7 @@ var (
 	configFile      = flag.String("c", "etc/conf.yaml", "配置文件，默认etc/conf.yaml")
 	dbPath          = flag.String("db", "level.db", "database path")
 	callbackworkers = flag.Int("cw", runtime.NumCPU(), "callback并发数，默认是cpu数")
-	trycallnums     = flag.Int("cn", 10, "callback失败重试次数")
-	sms             *SMS
-	SMSModel        *Model
+	trycallnums     = flag.Uint("cn", 10, "callback失败重试次数")
 )
 
 func init() {
@@ -30,14 +28,25 @@ func init() {
 		os.Exit(1)
 	}
 
-	sms = NewSms()
-
-	SMSModel = NewModel(sms)
+	init_db()
 
 	RunCallbackTask()
 }
 
 func main() {
-
+	smscodetxt := `
+                                             **
+                                              *
+                                              *
+  ***** *******   *****    ***    ****    *****   ****
+ *    *  *  *  * *    *   *   *  *    *  *    *  *    *
+ *       *  *  * *       *       *    *  *    *  *    *
+  ****   *  *  *  ****   *       *    *  *    *  ******
+      *  *  *  *      *  *       *    *  *    *  *
+ *    *  *  *  * *    *   *   *  *    *  *   **  *    *
+ *****  *** ** *******     ***    ****    *** **  ****
+	`
+	fmt.Println(smscodetxt)
+	fmt.Printf("Smscode Server v%s ...\nhttps://github.com/xluohome/smscode\n", VERSION)
 	Apiserver()
 }

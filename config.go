@@ -10,7 +10,7 @@ type Config struct {
 	Bind        string                       `yaml:"bind"`
 	Vendors     map[string]map[string]string `yaml:"vendors"`
 	Juheapikey  string                       `yaml:"juheapikey"`
-	ServiceList map[string]ServiceConfig     `yaml:"servicelist"`
+	ServiceList map[string]*ServiceConfig    `yaml:"servicelist"`
 	Errormsg    map[string]string            `yaml:"errormsg"`
 }
 

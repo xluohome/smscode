@@ -20,3 +20,18 @@ func TestYuntongxun(t *testing.T) {
 	}
 
 }
+
+func TestWxhy(t *testing.T) {
+
+	var sms = NewSms()
+	sms.SetServiceConfig("getpwd")
+	sms.Code = "888888"
+	sms.Mobile = "13575566313"
+
+	var y = &Hywx{sms: sms}
+
+	if err := y.Send(); err != nil {
+		t.Error(err)
+	}
+
+}

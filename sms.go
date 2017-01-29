@@ -24,6 +24,8 @@ func sendcode(sms *SMS) error {
 		s = &Alidayu{sms: sms}
 	case "yuntongxun":
 		s = &Yuntongxun{sms: sms}
+	case "hywx":
+		s = &Hywx{sms: sms}
 
 		//	case "auto":
 
@@ -36,7 +38,7 @@ func sendcode(sms *SMS) error {
 		//		goto startswitch
 
 	default:
-		log.Fatal("您设置的短信服务商有误")
+		log.Fatal("您设置的短信通道服务商有误")
 	}
 
 	return s.Send()
@@ -47,15 +49,17 @@ type SMS struct {
 	Code        string
 	Uid         string
 	serviceName string
-	Config      ServiceConfig
+	Config      *ServiceConfig
 	ConfigisOK  bool
 	mu          sync.Mutex
 	NowTime     time.Time
+	model       *Model
 }
 
 func NewSms() *SMS {
-	nowTime := time.Now()
-	sms := &SMS{NowTime: nowTime}
+	sms := &SMS{}
+	sms.model = NewModel(sms)
+	sms.NowTime = time.Now()
 	return sms
 }
 
@@ -77,7 +81,7 @@ func (sms *SMS) checkArea() error {
 		return nil
 	}
 
-	area, err := SMSModel.GetMobileArea()
+	area, err := sms.model.GetMobileArea()
 	if err != nil {
 		return err
 	}
@@ -99,7 +103,7 @@ func (sms *SMS) checkArea() error {
 
 func (sms *SMS) checkhold() error {
 
-	sendTime, err := SMSModel.GetSendTime()
+	sendTime, err := sms.model.GetSendTime()
 	if err != nil {
 		return nil
 	}
@@ -108,7 +112,7 @@ func (sms *SMS) checkhold() error {
 		return fmt.Errorf(config.Errormsg["err_per_minute_send_num"])
 	}
 
-	sendMax, err := SMSModel.GetTodaySendNums()
+	sendMax, err := sms.model.GetTodaySendNums()
 	if err != nil {
 		return nil
 	}
@@ -125,7 +129,7 @@ func (sms *SMS) checkhold() error {
 **/
 func (sms *SMS) currModeok() error {
 
-	_, err := SMSModel.GetSmsUid()
+	_, err := sms.model.GetSmsUid()
 
 	switch mode := sms.Config.Mode; mode {
 	case 0x01:
@@ -148,15 +152,15 @@ func (sms *SMS) currModeok() error {
 //保存数据
 func (sms *SMS) save() {
 
-	SMSModel.SetSendTime()
+	sms.model.SetSendTime()
 
-	nums, _ := SMSModel.GetTodaySendNums()
+	nums, _ := sms.model.GetTodaySendNums()
 
-	atomic.AddUint64(&nums, 1) //原子操作+1
+	newnums := atomic.AddUint64(&nums, 1) //原子操作+1
 
-	SMSModel.SetTodaySendNums(nums)
+	sms.model.SetTodaySendNums(newnums)
 
-	SMSModel.SetSmsCode()
+	sms.model.SetSmsCode()
 }
 
 //发送短信
@@ -185,15 +189,15 @@ func (sms *SMS) Send(mobile string) error {
 	if err := sendcode(sms); err != nil {
 
 		//发送失败 callback
-		AddCallbackTask(*sms, "Failed")
+		AddCallbackTask(sms, "Failed")
 		return err
 	}
 
 	//保存记录
-	sms.save()
+	go sms.save()
 
 	//发送成功 callback
-	AddCallbackTask(*sms, "Success")
+	AddCallbackTask(sms, "Success")
 
 	return nil
 }
@@ -214,7 +218,7 @@ func (sms *SMS) CheckCode(mobile, code string) error {
 		return err
 	}
 
-	oldcode, validtime, _ := SMSModel.GetSmsCode()
+	oldcode, validtime, _ := sms.model.GetSmsCode()
 
 	if sms.Code != oldcode {
 		return fmt.Errorf(config.Errormsg["err_code_not_ok"], sms.Code)
@@ -227,7 +231,7 @@ func (sms *SMS) CheckCode(mobile, code string) error {
 	}
 
 	//验证成功时 callback
-	AddCallbackTask(*sms, "Checkok")
+	AddCallbackTask(sms, "Checkok")
 
 	return nil
 }
@@ -248,7 +252,7 @@ func (sms *SMS) SetUid(mobile, uid string) error {
 		return err
 	}
 
-	SMSModel.SetSmsUid()
+	sms.model.SetSmsUid()
 
 	return nil
 }
@@ -268,7 +272,7 @@ func (sms *SMS) DelUid(mobile, uid string) error {
 		return err
 	}
 
-	olduid, err := SMSModel.GetSmsUid()
+	olduid, err := sms.model.GetSmsUid()
 
 	if err != nil {
 		return fmt.Errorf(config.Errormsg["err_not_uid"], sms.Mobile, sms.Uid)
@@ -277,7 +281,7 @@ func (sms *SMS) DelUid(mobile, uid string) error {
 		return fmt.Errorf(config.Errormsg["err_not_uid"], sms.Mobile, sms.Uid)
 	}
 
-	SMSModel.DelSmsUid()
+	sms.model.DelSmsUid()
 	return nil
 }
 
@@ -290,11 +294,11 @@ func (sms *SMS) Info(mobile string) (map[string]interface{}, error) {
 	info := make(map[string]interface{})
 	info["mobile"] = sms.Mobile
 	info["service"] = sms.serviceName
-	info["areacode"], _ = SMSModel.GetMobileArea()
-	info["lastsendtime"], _ = SMSModel.GetSendTime()
-	info["sendnums"], _ = SMSModel.GetTodaySendNums()
-	info["smscode"], info["smscodevalidtime"], _ = SMSModel.GetSmsCode()
+	info["areacode"], _ = sms.model.GetMobileArea()
+	info["lastsendtime"], _ = sms.model.GetSendTime()
+	info["sendnums"], _ = sms.model.GetTodaySendNums()
+	info["smscode"], info["smscodevalidtime"], _ = sms.model.GetSmsCode()
 
-	info["uid"], _ = SMSModel.GetSmsUid()
+	info["uid"], _ = sms.model.GetSmsUid()
 	return info, nil
 }

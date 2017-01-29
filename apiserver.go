@@ -6,9 +6,8 @@ import (
 	"net/http"
 )
 
-const ContentType = "text/json"
-
 type apiserver struct {
+	sms *SMS
 }
 
 func (s *apiserver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -22,19 +21,20 @@ func (s *apiserver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	serviceName := r.FormValue("service")
 	uid := r.FormValue("uid")
 
-	sms.SetServiceConfig(serviceName)
+	s.sms = NewSms()
+	s.sms.SetServiceConfig(serviceName)
 
 	switch r.URL.String() {
 	case "/send":
-		err = sms.Send(mobile)
+		err = s.sms.Send(mobile)
 	case "/checkcode":
-		err = sms.CheckCode(mobile, code)
+		err = s.sms.CheckCode(mobile, code)
 	case "/setuid":
-		err = sms.SetUid(mobile, uid)
+		err = s.sms.SetUid(mobile, uid)
 	case "/deluid":
-		err = sms.DelUid(mobile, uid)
+		err = s.sms.DelUid(mobile, uid)
 	case "/info":
-		infos, err = sms.Info(mobile)
+		infos, err = s.sms.Info(mobile)
 	default:
 		err = fmt.Errorf("%s", "您访问的api不存在")
 	}
@@ -46,7 +46,7 @@ func (s *apiserver) echoJson(w http.ResponseWriter, err error, info interface{})
 
 	var result Result
 
-	switch sms.Config.Outformat {
+	switch s.sms.Config.Outformat {
 	case "mobcent":
 		result = &Result_mobcent{}
 	default:
@@ -63,7 +63,5 @@ func (s *apiserver) echoJson(w http.ResponseWriter, err error, info interface{})
 }
 
 func Apiserver() {
-	fmt.Println("Start Smscode Server...")
-
 	http.ListenAndServe(config.Bind, &apiserver{})
 }

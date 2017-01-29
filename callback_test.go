@@ -33,7 +33,7 @@ func TestNewCallback(t *testing.T) {
 	sms.Mobile = "13575566313"
 	sms.Code = "999999"
 	sms.Config.Callback = "http://127.0.0.1:8080/test"
-	AddCallbackTask(*sms, "test")
+	AddCallbackTask(sms, "test")
 
 	<-wating
 

@@ -26,7 +26,7 @@ func RunCallbackTask() {
 	}
 }
 
-func AddCallbackTask(sms SMS, flag string) {
+func AddCallbackTask(sms *SMS, flag string) {
 
 	if len(sms.Config.Callback) < 1 { //没有启用
 		return
@@ -59,7 +59,7 @@ func (c Callback) Do(cbs <-chan Callback) {
 			if res.StatusCode == http.StatusOK {
 				return
 			}
-			if cb.callnums > trycallnums {
+			if cb.callnums > *trycallnums {
 				log.Errorf("重试%d次callback均失败:%v", trycallnums, cb)
 				return
 			}
