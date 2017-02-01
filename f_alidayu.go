@@ -18,7 +18,8 @@ type Alidayu struct {
  短信通知： 使用同一个签名和同一个短信模板ID，对同一个手机号码发送短信通知，支持50条/日 【手机号，签名，模板id】
 
 **/
-func (a *Alidayu) Send() error {
+func (a *Alidayu) Send(sms *SMS) error {
+	a.sms = sms
 	alidayu.Appkey = config.Vendors["alidayu"]["appkey"]
 	alidayu.AppSecret = config.Vendors["alidayu"]["appSecret"]
 	if config.Vendors["alidayu"]["issendbox"] == "true" {
@@ -32,4 +33,8 @@ func (a *Alidayu) Send() error {
 		return fmt.Errorf("%s", res.ResultError.SubMsg)
 	}
 	return nil
+}
+
+func init() {
+	smsvendor["alidayu"] = &Alidayu{}
 }

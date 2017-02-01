@@ -30,8 +30,8 @@ type result struct {
 	StatusMsg  string `json:"statusMsg"`
 }
 
-func (y *Yuntongxun) Send() error {
-
+func (y *Yuntongxun) Send(sms *SMS) error {
+	y.sms = sms
 	b, err := y.body()
 	if err != nil {
 		return err
@@ -49,6 +49,9 @@ func (y *Yuntongxun) Send() error {
 
 	client := http.Client{}
 	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -99,4 +102,8 @@ func (y *Yuntongxun) authen() string {
 	buf.WriteByte(':')
 	buf.WriteString(y.sms.NowTime.Format("20060102150405"))
 	return base64.URLEncoding.EncodeToString(buf.Bytes())
+}
+
+func init() {
+	smsvendor["yuntongxun"] = &Yuntongxun{}
 }

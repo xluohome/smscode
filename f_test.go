@@ -6,6 +6,21 @@ import (
 	//"github.com/issue9/assert"
 )
 
+func TestAlidayu(t *testing.T) {
+
+	var sms = NewSms()
+	sms.SetServiceConfig("register")
+	sms.Code = "888888"
+	sms.Mobile = "13575566313"
+
+	var y = &Alidayu{}
+
+	if err := y.Send(sms); err != nil {
+		t.Error(err)
+	}
+
+}
+
 func TestYuntongxun(t *testing.T) {
 
 	var sms = NewSms()
@@ -13,9 +28,9 @@ func TestYuntongxun(t *testing.T) {
 	sms.Code = "888888"
 	sms.Mobile = "13575566313"
 
-	var y = &Yuntongxun{sms: sms}
+	var y = &Yuntongxun{}
 
-	if err := y.Send(); err != nil {
+	if err := y.Send(sms); err != nil {
 		t.Error(err)
 	}
 
@@ -28,9 +43,9 @@ func TestWxhy(t *testing.T) {
 	sms.Code = "888888"
 	sms.Mobile = "13575566313"
 
-	var y = &Hywx{sms: sms}
+	var y = &Hywx{}
 
-	if err := y.Send(); err != nil {
+	if err := y.Send(sms); err != nil {
 		t.Error(err)
 	}
 

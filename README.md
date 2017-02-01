@@ -13,7 +13,7 @@ SmsCode
 
 得益于Go语言的跨平台支持，SmsCode可安装在所有主流OS上（Linux，Mac OS X，FreeBSD，Windows，ARM等）
 
-推荐Linux x64上安装SmsCode，编译安装请确保已经在OS上安装了Go的编译环境。
+推荐Linux x64上安装SmsCode，编译安装请确保已经在OS上安装了Go的编译环境(GO 1.5+)。
 
     go get -u github.com/xluohome/smscode
 
@@ -21,7 +21,9 @@ SmsCode
 
 	./build  && ./smscode
 
+### Docker 部署Smscode
 
+请参考项目中的Dockerfile 制作Docker image。
 
 ### 功能特性
 
@@ -36,13 +38,13 @@ SmsCode
  - 0x03：不管uid是否存在都发送。
 7. 通过setuid接口可将现有系统中的用户UID数据导入SmsCode;
 8. 内置持久化存储：Goleveldb;
-9. 支持Docker部署，SmsCode静态编译docker image不到8mb;
+9. 支持Docker部署，SmsCode静态编译(Go 1.7.5)Docker image不到8mb;
 
 ### 配置文件 etc/conf.yaml
 
 ```
 bind: 0.0.0.0:8080  #短信验证码微服务器地址
-juheapikey: aaaaaaaaaaaaaaaadddddddd  #手机号归属地信息获取接口 https://www.juhe.cn/
+juheapikey: aaaaaaaaaaaaaaaadddddddd  #手机号归属地信息获取接口 https://www.juhe.cn/docs/api/id/11
 vendors:
   alidayu: #阿里大鱼配置 http://www.alidayu.com
     appkey: 20315570
@@ -54,6 +56,10 @@ vendors:
     AppId: aaf98f8fsdafd2678c9d07875040f
     SoftVersion: 2013-12-26
     RestURL: https://app.cloopen.com:8883
+  hywx: #互亿无线  http://www.ihuyi.cn/
+    account: 6666666666666666
+    password: 88888888888888888888888
+    RestURL: http://106.ihuyi.cn/webservice/sms.php?method=Submit
 
 errormsg:
   "err_model_not_ok1": "当前用户(%s)不存在，不能发送手机验证码"
@@ -79,7 +85,7 @@ servicelist:
     maxsendnums: 4   #一个手机号每天发送限额,这个受短信运营商的限制。
     validtime: 600  #单位：秒 。 收到的手机验证码x秒内有效，超过后验证无效；
     mode: 2   #模式  1：只有手机号对应的uid存在时才能发送，2：只有uid不存在时才能发送，3：不管uid是否存在都发送
-    outformat: mobcent  #接口输出样式（mobcent,default）
+    outformat: mobcent  #RestAPi接口输出样式（mobcent,default）
 
   "restpwd":
     vendor: alidayu
@@ -106,7 +112,7 @@ servicelist:
     validtime: 360
     mode: 3
 ```
-### SmsCode 接口说明
+### SmsCode RestAPi 接口说明
 
 
 | 接口名称        | 接口地址           | 参数  | 说明 |
@@ -118,7 +124,7 @@ servicelist:
 |信息查询|/info |service, mobile  |服务名称,手机号
 
 
-### callback 服务
+### Callback 服务
 
 每个短信验证码服务允许设置一个callback Url ；
 如下事件发生时将回调callback Url
@@ -140,4 +146,6 @@ flag  string #回调标记 (Success,Failed,Checkok)
 
 ### 联系作者
 欢迎来信交流
-phposs@qq.com
+phposs@qq.com ，
+QQ群
+309020981

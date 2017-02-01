@@ -8,26 +8,25 @@ import (
 
 	log "github.com/golang/glog"
 	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/errors"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-)
-
-var (
-	once        sync.Once
-	cacheSize   int = 64
-	writeBuffer int = 32
 )
 
 type Model struct {
 	sms *SMS
 	db  *leveldb.DB
+	mu  sync.Mutex
 }
 
-var db *leveldb.DB
+var (
+	db   *leveldb.DB
+	once sync.Once
+)
 
 func init_db() {
 	var err error
-	var opt = &opt.Options{BlockCacheCapacity: cacheSize,
-		WriteBuffer: writeBuffer * 1024 * 1024}
+	var opt = &opt.Options{BlockCacheCapacity: CacheSize,
+		WriteBuffer: WriteBuffer * 1024 * 1024}
 	db, err = leveldb.OpenFile(*dbPath, opt)
 	if err != nil {
 		log.Fatalln("db.Get(), err:", err)
@@ -35,8 +34,13 @@ func init_db() {
 }
 
 func NewModel(sms *SMS) (SMSModel *Model) {
-	SMSModel = &Model{db: db}
+
+	once.Do(func() {
+		init_db()
+	})
+	SMSModel = &Model{}
 	SMSModel.sms = sms
+	SMSModel.db = db
 	return
 }
 
@@ -50,9 +54,9 @@ func (m *Model) GetMobileArea() (string, error) {
 	key := buf.Bytes()
 
 	mobileinfo, err := m.db.Get(key, nil)
-	if err != nil {
-		m.sms.mu.Lock()
-		defer m.sms.mu.Unlock()
+	if err == errors.ErrNotFound {
+		m.mu.Lock()
+		defer m.mu.Unlock()
 
 		api := NewJuheApi() //通过juheapi 获取手机归属地信息
 		if err := api.Query(m.sms.Mobile); err != nil {
@@ -66,6 +70,8 @@ func (m *Model) GetMobileArea() (string, error) {
 		}
 
 		return "", fmt.Errorf("%s,获取归属地不成功", m.sms.Mobile)
+	} else if err != nil {
+		return "", err
 	}
 
 	return string(mobileinfo), nil
@@ -100,7 +106,9 @@ func (m *Model) GetSendTime() (int64, error) {
 
 	key := buf.Bytes()
 	sendTime, err := m.db.Get(key, nil)
-	if err != nil {
+	if err == errors.ErrNotFound {
+		return 0, nil
+	} else if err != nil {
 		return 0, err
 	}
 
@@ -148,7 +156,9 @@ func (m *Model) GetTodaySendNums() (uint64, error) {
 
 	key := buf.Bytes()
 	nums, err := m.db.Get(key, nil)
-	if err != nil {
+	if err == errors.ErrNotFound {
+		return 0, nil
+	} else if err != nil {
 		return 0, err
 	}
 
@@ -199,7 +209,9 @@ func (m *Model) GetSmsCode() (code string, uxtime int64, err error) {
 
 	var val []byte
 	val, err = m.db.Get(key, nil)
-	if err != nil {
+	if err == errors.ErrNotFound {
+		return "", 0, nil
+	} else if err != nil {
 		return "", 0, err
 	}
 
@@ -254,7 +266,9 @@ func (m *Model) GetSmsUid() (string, error) {
 
 	key := buf.Bytes()
 	uid, err := m.db.Get(key, nil)
-	if err != nil {
+	if err == errors.ErrNotFound {
+		return "", nil
+	} else if err != nil {
 		return "", err
 	}
 

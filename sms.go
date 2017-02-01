@@ -11,38 +11,24 @@ import (
 )
 
 type Sender interface {
-	Send() error
+	Send(sms *SMS) error
 }
 
 func sendcode(sms *SMS) error {
-
-	var s Sender
-	var vendor = sms.Config.Vendor
-	//startswitch:
-	switch vendor {
-	case "alidayu":
-		s = &Alidayu{sms: sms}
-	case "yuntongxun":
-		s = &Yuntongxun{sms: sms}
-	case "hywx":
-		s = &Hywx{sms: sms}
-
-		//	case "auto":
-
-		//		var names []string
-		//		for name, _ := range config.Vendors {
-		//			names = append(names, name)
-		//		}
-		//		n := rand.Intn(len(names))
-		//		vendor = names[n]
-		//		goto startswitch
-
-	default:
+	var vname = sms.Config.Vendor
+	v, ok := smsvendor[vname]
+	if !ok {
 		log.Fatal("您设置的短信通道服务商有误")
+		return fmt.Errorf("%s", "短信通道设置不正确")
 	}
-
-	return s.Send()
+	return v.Send(sms)
 }
+
+var (
+	smap      = make(map[string]bool)
+	smsmut    sync.Mutex
+	smsvendor = make(map[string]Sender)
+)
 
 type SMS struct {
 	Mobile      string
@@ -51,7 +37,6 @@ type SMS struct {
 	serviceName string
 	Config      *ServiceConfig
 	ConfigisOK  bool
-	mu          sync.Mutex
 	NowTime     time.Time
 	model       *Model
 }
@@ -65,8 +50,8 @@ func NewSms() *SMS {
 
 //设置服务配置文件
 func (sms *SMS) SetServiceConfig(serviceName string) *SMS {
-	sms.mu.Lock()
-	defer sms.mu.Unlock()
+	smsmut.Lock()
+	defer smsmut.Unlock()
 	sms.Config, sms.ConfigisOK = config.ServiceList[serviceName]
 	if sms.ConfigisOK {
 		sms.serviceName = serviceName
@@ -105,19 +90,19 @@ func (sms *SMS) checkhold() error {
 
 	sendTime, err := sms.model.GetSendTime()
 	if err != nil {
-		return nil
+		return err
 	}
 
-	if sms.NowTime.Unix()-sendTime < 60 { //发送间隔不能小于60秒
+	if sendTime > 0 && sms.NowTime.Unix()-sendTime < Maxsendtime { //发送间隔不能小于60秒
 		return fmt.Errorf(config.Errormsg["err_per_minute_send_num"])
 	}
 
 	sendMax, err := sms.model.GetTodaySendNums()
 	if err != nil {
-		return nil
+		return err
 	}
 
-	if sendMax >= sms.Config.MaxSendNums {
+	if sendMax > 0 && sendMax >= sms.Config.MaxSendNums {
 		return fmt.Errorf(config.Errormsg["err_per_day_max_send_nums"], sms.Config.MaxSendNums)
 	}
 
@@ -129,16 +114,18 @@ func (sms *SMS) checkhold() error {
 **/
 func (sms *SMS) currModeok() error {
 
-	_, err := sms.model.GetSmsUid()
-
+	uid, err := sms.model.GetSmsUid()
+	if err != nil {
+		return err
+	}
 	switch mode := sms.Config.Mode; mode {
 	case 0x01:
-		if err == nil {
+		if uid != "" {
 			return nil
 		}
 		return fmt.Errorf(config.Errormsg["err_model_not_ok1"], sms.Mobile)
 	case 0x02:
-		if err != nil {
+		if uid == "" {
 			return nil
 		}
 		return fmt.Errorf(config.Errormsg["err_model_not_ok2"], sms.Mobile)
@@ -169,9 +156,30 @@ func (sms *SMS) Send(mobile string) error {
 		return fmt.Errorf("(%s)服务配置不存在", sms.serviceName)
 	}
 
+	/**
+	限制一个手机号只允许在一次send成功（失败）后再次send
+	为什么这么做？
+	1：在高并发下保证一个手机号的send操作是同步的，后续规则校验可以依次进行；
+	2：同时保证高并发下的send性能；
+	**/
+	smsmut.Lock()
+	if _, ok := smap[mobile]; ok {
+		smsmut.Unlock()
+		return fmt.Errorf("服务器忙请稍后再试...")
+	}
+	smap[mobile] = true
+	smsmut.Unlock()
+
+	//send返回后取消限制
+	defer func() {
+		smsmut.Lock()
+		delete(smap, mobile)
+		smsmut.Unlock()
+	}()
+
 	sms.Mobile = mobile
 
-	//手机验证码
+	//生成验证码
 	sms.Code = makeCode()
 
 	if err := VailMobile(sms.Mobile); err != nil {
@@ -180,10 +188,10 @@ func (sms *SMS) Send(mobile string) error {
 	if err := sms.checkArea(); err != nil {
 		return err
 	}
-	if err := sms.checkhold(); err != nil {
+	if err := sms.currModeok(); err != nil {
 		return err
 	}
-	if err := sms.currModeok(); err != nil {
+	if err := sms.checkhold(); err != nil {
 		return err
 	}
 	if err := sendcode(sms); err != nil {
@@ -194,7 +202,7 @@ func (sms *SMS) Send(mobile string) error {
 	}
 
 	//保存记录
-	go sms.save()
+	sms.save()
 
 	//发送成功 callback
 	AddCallbackTask(sms, "Success")

@@ -22,8 +22,8 @@ type Hywx struct {
 	Msg     string   `xml:"msg"`
 }
 
-func (h *Hywx) Send() error {
-
+func (h *Hywx) Send(sms *SMS) error {
+	h.sms = sms
 	var data = make(url.Values)
 	data.Set("account", config.Vendors["hywx"]["account"])
 	data.Set("password", config.Vendors["hywx"]["password"])
@@ -49,4 +49,8 @@ func (h *Hywx) Send() error {
 	}
 
 	return nil
+}
+
+func init() {
+	smsvendor["hywx"] = &Hywx{}
 }

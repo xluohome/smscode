@@ -28,8 +28,6 @@ func init() {
 		os.Exit(1)
 	}
 
-	init_db()
-
 	RunCallbackTask()
 }
 
@@ -45,8 +43,10 @@ func main() {
       *  *  *  *      *  *       *    *  *    *  *
  *    *  *  *  * *    *   *   *  *    *  *   **  *    *
  *****  *** ** *******     ***    ****    *** **  ****
-	`
-	fmt.Println(smscodetxt)
-	fmt.Printf("Smscode Server v%s ...\nhttps://github.com/xluohome/smscode\n", VERSION)
+https://github.com/xluohome/smscode
+
+`
+	fmt.Print(smscodetxt)
+	fmt.Printf("Smscode Server v%s ...\n\n", VERSION)
 	Apiserver()
 }

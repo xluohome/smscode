@@ -11,8 +11,8 @@ func BenchmarkSendSms111(b *testing.B) {
 		sms := NewSms()
 		sms.SetServiceConfig("register")
 		if err := sms.Send("13575566313"); err != nil {
-
-			//b(err)
+			b.Log(err)
+			//b.Error(err)
 		}
 
 	}
