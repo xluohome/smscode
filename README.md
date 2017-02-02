@@ -54,6 +54,10 @@ vendors:
     AppId: aaf98f8fsdafd2678c9d07875040f
     SoftVersion: 2013-12-26
     RestURL: https://app.cloopen.com:8883
+  hywx: #互亿无线
+    account: 6666666666666666
+    password: 88888888888888888888888
+    RestURL: http://106.ihuyi.cn/webservice/sms.php?method=Submit    
 
 errormsg:
   "err_model_not_ok1": "当前用户(%s)不存在，不能发送手机验证码"
