@@ -18,8 +18,6 @@ func TestMobileArea(t *testing.T) {
 
 	model := NewModel(sms)
 
-	model.SetMobileArea("0575")
-
 	t.Log("13575566313 SetMobileArea  0575 ")
 
 	area, err := model.GetMobileArea()
@@ -31,7 +29,9 @@ func TestMobileArea(t *testing.T) {
 
 	a.Equal(area, "0575")
 
-	t.Log("13575566313 GetMobileArea:", area)
+	info, _ := model.GetMobileInfo()
+
+	t.Log("13575566313 mobileinfo:", info)
 
 }
 

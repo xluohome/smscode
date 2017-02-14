@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"fmt"
+	//"fmt"
 	"sync"
 	"time"
 
@@ -10,6 +10,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"github.com/syndtr/goleveldb/leveldb/opt"
+	"github.com/zheng-ji/gophone"
 )
 
 type Model struct {
@@ -44,50 +45,24 @@ func NewModel(sms *SMS) (SMSModel *Model) {
 	return
 }
 
-func (m *Model) GetMobileArea() (string, error) {
+func (m *Model) GetMobileInfo() (*gophone.PhoneRecord, error) {
 
-	var buf bytes.Buffer
-	buf.WriteString(m.sms.Config.Group)
-	buf.WriteString(":mobilearea:")
-	buf.WriteString(m.sms.Mobile)
-
-	key := buf.Bytes()
-
-	mobileinfo, err := m.db.Get(key, nil)
-	if err == errors.ErrNotFound {
-		m.mu.Lock()
-		defer m.mu.Unlock()
-
-		api := NewJuheApi() //通过juheapi 获取手机归属地信息
-		if err := api.Query(m.sms.Mobile); err != nil {
-			return "", err
-		}
-		log.V(1).Infof("%v", api.Result)
-		if api.Result.Error_code == 0 {
-			areacode := api.Result.Result["areacode"]
-			m.SetMobileArea(areacode)
-			return areacode, nil
-		}
-
-		return "", fmt.Errorf("%s,获取归属地不成功", m.sms.Mobile)
-	} else if err != nil {
-		return "", err
+	//感谢 zheng-ji github.com/zheng-ji/gophone
+	pr, err := gophone.Find(m.sms.Mobile)
+	if err != nil {
+		return nil, err
 	}
-
-	return string(mobileinfo), nil
-
+	return pr, nil
 }
 
-func (m *Model) SetMobileArea(area string) {
+func (m *Model) GetMobileArea() (string, error) {
 
-	var buf bytes.Buffer
-	buf.WriteString(m.sms.Config.Group)
-	buf.WriteString(":mobilearea:")
-	buf.WriteString(m.sms.Mobile)
-
-	key := buf.Bytes()
-	val := []byte(area)
-	m.db.Put(key, val, nil)
+	//感谢 zheng-ji github.com/zheng-ji/gophone
+	mobileinfo, err := m.GetMobileInfo()
+	if err != nil {
+		return "", err
+	}
+	return mobileinfo.AreaZone, nil
 }
 
 /**

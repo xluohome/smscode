@@ -15,19 +15,26 @@ type Sender interface {
 }
 
 func sendcode(sms *SMS) error {
-	var vname = sms.Config.Vendor
-	v, ok := smsvendor[vname]
-	if !ok {
-		log.Fatal("您设置的短信通道服务商有误")
+	var s Sender
+	switch vendor := sms.Config.Vendor; vendor {
+	case "alidayu":
+		s = &Alidayu{sms: sms}
+	case "yuntongxun":
+		s = &Yuntongxun{sms: sms}
+	case "hywx":
+		s = &Hywx{sms: sms}
+	case "demo":
+		s = &Demov{sms: sms}
+	default:
+		log.Warning("设置的短信服务商有误")
 		return fmt.Errorf("%s", "短信通道设置不正确")
 	}
-	return v.Send(sms)
+	return s.Send(sms)
 }
 
 var (
-	smap      = make(map[string]bool)
-	smsmut    sync.Mutex
-	smsvendor = make(map[string]Sender)
+	smap   = make(map[string]bool)
+	smsmut sync.Mutex
 )
 
 type SMS struct {
@@ -155,7 +162,9 @@ func (sms *SMS) Send(mobile string) error {
 	if !sms.ConfigisOK {
 		return fmt.Errorf("(%s)服务配置不存在", sms.serviceName)
 	}
-
+	if err := VailMobile(mobile); err != nil {
+		return err
+	}
 	/**
 	限制一个手机号只允许在一次send成功（失败）后再次send
 	为什么这么做？
@@ -178,13 +187,8 @@ func (sms *SMS) Send(mobile string) error {
 	}()
 
 	sms.Mobile = mobile
-
-	//生成验证码
 	sms.Code = makeCode()
 
-	if err := VailMobile(sms.Mobile); err != nil {
-		return err
-	}
 	if err := sms.checkArea(); err != nil {
 		return err
 	}
@@ -228,14 +232,13 @@ func (sms *SMS) CheckCode(mobile, code string) error {
 
 	oldcode, validtime, _ := sms.model.GetSmsCode()
 
-	if sms.Code != oldcode {
+	if oldcode == "" || sms.Code != oldcode {
 		return fmt.Errorf(config.Errormsg["err_code_not_ok"], sms.Code)
 	}
 
 	if sms.NowTime.Unix() > validtime {
 		time1 := time.Unix(validtime, 0)
 		return fmt.Errorf(config.Errormsg["err_vailtime_not_ok"], time.Since(time1).String())
-
 	}
 
 	//验证成功时 callback
@@ -299,6 +302,9 @@ func (sms *SMS) Info(mobile string) (map[string]interface{}, error) {
 	}
 	sms.Mobile = mobile
 
+	if err := VailMobile(sms.Mobile); err != nil {
+		return nil, err
+	}
 	info := make(map[string]interface{})
 	info["mobile"] = sms.Mobile
 	info["service"] = sms.serviceName
@@ -306,7 +312,7 @@ func (sms *SMS) Info(mobile string) (map[string]interface{}, error) {
 	info["lastsendtime"], _ = sms.model.GetSendTime()
 	info["sendnums"], _ = sms.model.GetTodaySendNums()
 	info["smscode"], info["smscodevalidtime"], _ = sms.model.GetSmsCode()
-
+	info["extinfo"], _ = sms.model.GetMobileInfo()
 	info["uid"], _ = sms.model.GetSmsUid()
 	return info, nil
 }

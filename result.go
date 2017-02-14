@@ -44,7 +44,7 @@ func (res *Result_mobcent) Format(err error, info interface{}) {
 	if err == nil {
 		res.Rs = 1
 		res.Head.ErrCode = "000000"
-		res.Head.ErrInfo = "golang调用成功,没有任何错"
+		res.Head.ErrInfo = "smscode调用成功,没有任何错"
 		if info != nil {
 			res.Body["info"] = info
 		}

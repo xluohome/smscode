@@ -50,7 +50,3 @@ func (h *Hywx) Send(sms *SMS) error {
 
 	return nil
 }
-
-func init() {
-	smsvendor["hywx"] = &Hywx{}
-}

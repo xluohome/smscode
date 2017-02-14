@@ -34,7 +34,3 @@ func (a *Alidayu) Send(sms *SMS) error {
 	}
 	return nil
 }
-
-func init() {
-	smsvendor["alidayu"] = &Alidayu{}
-}

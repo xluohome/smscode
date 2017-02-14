@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	log "github.com/golang/glog"
 )
 
 type apiserver struct {
 }
 
 func (apiserver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	defer fmt.Println(r.RemoteAddr, r.URL)
+	defer log.Info(r.RemoteAddr, r.URL)
 
 	var err error
 	var infos interface{}

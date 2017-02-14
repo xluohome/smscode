@@ -103,7 +103,3 @@ func (y *Yuntongxun) authen() string {
 	buf.WriteString(y.sms.NowTime.Format("20060102150405"))
 	return base64.URLEncoding.EncodeToString(buf.Bytes())
 }
-
-func init() {
-	smsvendor["yuntongxun"] = &Yuntongxun{}
-}

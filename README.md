@@ -27,24 +27,23 @@ SmsCode
 
 ### 功能特性
 
-1. 支持阿里大鱼、云通讯等多个手机短信验证码通道;
-2. 自定义多个手机验证码短信服务接口，如：注册服务，重设密码，身份验证等等;
-3. 支持手机号归属地限制，只允许指定的归属地手机号接收短信验证码;
-4. 每个短信验证码服务可设置每日发送数量限额及失效时间;
-5. 内置callback服务，可设置短信验证码发送成功（失败）、验证码验证成功时的回调URL;
-6. 可设置短信验证码发送模式:
+1. 支持阿里大鱼、云通讯等多个“手机短信验证码”(以下简称：验证码)通道;
+2. 自定义多个验证码服务接口，如：新用户注册，重设密码，身份验证等等;
+3. 内置手机号归属地限制，可限制指定归属地手机号接收验证码;
+4. 每个验证码服务可设置验证码每日发送数量限额及失效时间;
+5. 内置callback服务，可设置验证码发送成功（失败）、验证码验证成功时的回调URL;
+6. 可设置验证码发送模式:
  - 0x01：只有手机号对应的uid存在时才能发送。
  - 0x02：只有uid不存在时才能发送。
  - 0x03：不管uid是否存在都发送。
 7. 通过setuid接口可将现有系统中的用户UID数据导入SmsCode;
 8. 内置持久化存储：Goleveldb;
-9. 支持Docker部署，SmsCode静态编译(Go 1.7.5)Docker image不到8mb;
+9. 支持Docker部署，SmsCode静态编译(Go 1.7.5)Docker image不到8mb(不含归属地数据库);
 
 ### 配置文件 etc/conf.yaml
 
 ```
 bind: 0.0.0.0:8080  #短信验证码微服务器地址
-juheapikey: aaaaaaaaaaaaaaaadddddddd  #手机号归属地信息获取接口 https://www.juhe.cn/docs/api/id/11
 vendors:
   alidayu: #阿里大鱼配置 http://www.alidayu.com
     appkey: 20315570
@@ -117,9 +116,9 @@ servicelist:
 
 | 接口名称        | 接口地址           | 参数  | 说明 |
   :------------- |:-------------| :-----|:----|
-|发送验证码 |/send	| service , mobile   |服务名称,手机号|
-|验证验证码	|/checkcode	|service , mobile,code   |服务名称,手机号,验证码
-|设置用户UID |/setuid | service , mobile,uid |服务名称,手机号 ,用户id
+|发送验证码 |/send	| service, mobile   |服务名称,手机号|
+|验证验证码	|/checkcode	|service, mobile,code   |服务名称,手机号,验证码
+|设置用户UID |/setuid | service, mobile,uid |服务名称,手机号 ,用户id
 |删除用户UID	|/deluid |service, mobile,uid |服务名称,手机号,用户id
 |信息查询|/info |service, mobile  |服务名称,手机号
 
@@ -132,9 +131,9 @@ servicelist:
 1. 手机验证码发送成功或者失败时。
 2. 手机验证码通过验证时。
 
-当 callback Url 无法访问时，系统会延时2,4,6,8,16,32,64,128秒 依次进行重试（合计10次）。
+当 callback Url无法访问时，系统会延时2,4,6,8,16,32,64,128秒 依次进行重试（合计10次）。
 
-成功时附带如下Url请求参数(multipart/form-data)：
+成功时附带如下Url POST请求参数(multipart/form-data)：
 ```
 
 mobile string  #手机号
