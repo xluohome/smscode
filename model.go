@@ -10,7 +10,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/errors"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-	"github.com/zheng-ji/gophone"
+	"github.com/xluohome/gophone"
 )
 
 type Model struct {
@@ -47,7 +47,7 @@ func NewModel(sms *SMS) (SMSModel *Model) {
 
 func (m *Model) GetMobileInfo() (*gophone.PhoneRecord, error) {
 
-	//感谢 zheng-ji github.com/zheng-ji/gophone
+	//感谢 zheng-ji
 	pr, err := gophone.Find(m.sms.Mobile)
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (m *Model) GetMobileInfo() (*gophone.PhoneRecord, error) {
 
 func (m *Model) GetMobileArea() (string, error) {
 
-	//感谢 zheng-ji github.com/zheng-ji/gophone
+	//感谢 zheng-ji
 	mobileinfo, err := m.GetMobileInfo()
 	if err != nil {
 		return "", err
