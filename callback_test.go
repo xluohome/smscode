@@ -1,11 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
-
-	//"github.com/issue9/assert"
 )
 
 func TestNewCallback(t *testing.T) {
@@ -14,12 +11,9 @@ func TestNewCallback(t *testing.T) {
 
 	var fun = func(w http.ResponseWriter, r *http.Request) {
 
-		fmt.Println(r.FormValue("mobile"))
-		fmt.Println(r.FormValue("uxtime"))
+		t.Log("mobile:", r.FormValue("mobile"), "code:", r.FormValue("code"), "uxtime:", r.FormValue("uxtime"))
 		w.Write([]byte("ok"))
-
 		wating <- true
-
 	}
 
 	go func() {
@@ -37,5 +31,4 @@ func TestNewCallback(t *testing.T) {
 
 	<-wating
 
-	//a.Equal(NewCallback("13575566313"), callback)
 }

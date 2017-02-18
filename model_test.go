@@ -7,19 +7,21 @@ import (
 	"github.com/issue9/assert"
 )
 
+var (
+	test2_mobile  = "13575566311"
+	test2_smscode = "888888"
+)
+
 func TestMobileArea(t *testing.T) {
 
 	a := assert.New(t)
 
 	sms := NewSms()
 	sms.SetServiceConfig("register")
-
-	sms.Mobile = "13575566313"
+	sms.Config.Allowcity = []string{"0575"}
+	sms.Mobile = test2_mobile
 
 	model := NewModel(sms)
-
-	t.Log("13575566313 SetMobileArea  0575 ")
-
 	area, err := model.GetMobileArea()
 
 	if err != nil {
@@ -28,10 +30,6 @@ func TestMobileArea(t *testing.T) {
 	}
 
 	a.Equal(area, "0575")
-
-	info, _ := model.GetMobileInfo()
-
-	t.Log("13575566313 mobileinfo:", info)
 
 }
 
@@ -43,13 +41,13 @@ func TestSendTime(t *testing.T) {
 
 	sms.SetServiceConfig("register")
 
-	sms.Mobile = "13575566313"
+	sms.Mobile = test2_mobile
+	sms.Config.Group = "testG"
+	sms.Config.Signname = "luoluo"
 
 	model := NewModel(sms)
 
 	model.SetSendTime()
-
-	t.Log("13575566313 SetSendTime  ", sms.NowTime.Unix())
 
 	time1, err := model.GetSendTime()
 
@@ -60,8 +58,6 @@ func TestSendTime(t *testing.T) {
 
 	a.Equal(time1, sms.NowTime.Unix())
 
-	t.Log("13575566313 GetSendTime:", time1)
-
 }
 
 func TestTodaySendNums(t *testing.T) {
@@ -71,14 +67,13 @@ func TestTodaySendNums(t *testing.T) {
 	sms := NewSms()
 
 	sms.SetServiceConfig("register")
-
-	sms.Mobile = "13575566313"
+	sms.Mobile = test2_mobile
+	sms.Config.Group = "testG"
+	sms.Config.Signname = "luoluo"
 
 	model := NewModel(sms)
 
 	model.SetTodaySendNums(1)
-
-	t.Log("13575566313 SetTodaySendNums  1 ")
 
 	num, err := model.GetTodaySendNums()
 	if err != nil {
@@ -87,8 +82,6 @@ func TestTodaySendNums(t *testing.T) {
 	}
 
 	a.Equal(num, 1)
-
-	t.Log("13575566313 GetTodaySendNums:", num)
 
 }
 
@@ -99,20 +92,17 @@ func TestSmsCode(t *testing.T) {
 	sms := NewSms()
 
 	sms.SetServiceConfig("register")
+	sms.Config.Group = "testG"
+	sms.Config.Signname = "luoluo"
 
-	sms.Mobile = "13575566313"
-
-	sms.Code = "888888"
+	sms.Mobile = test2_mobile
+	sms.Code = test2_smscode
 
 	model := NewModel(sms)
-
 	model.SetSmsCode()
-
-	t.Log("13575566313 SetSmsCode  888888 ", sms.NowTime.Unix())
 
 	code, uxtime, err := model.GetSmsCode()
 	if err != nil {
-
 		t.Error(err)
 	}
 
@@ -120,8 +110,5 @@ func TestSmsCode(t *testing.T) {
 		a.False(false)
 	}
 
-	a.Equal(code, "888888")
-
-	t.Log("13575566313 GetSmsCode:", code, uxtime)
-
+	a.Equal(code, test2_smscode)
 }

@@ -12,7 +12,16 @@ type apiserver struct {
 }
 
 func (apiserver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	defer log.Info(r.RemoteAddr, r.URL)
+	defer func() {
+		log.Info(r.RemoteAddr, r.URL)
+		if err := recover(); err != nil {
+			var msg = fmt.Sprintf("服务器错误:%s", err)
+			log.Error(msg)
+			w.WriteHeader(500)
+			w.Write([]byte(msg))
+			return
+		}
+	}()
 
 	var err error
 	var infos interface{}
@@ -59,5 +68,5 @@ func (apiserver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func Apiserver() {
-	http.ListenAndServe(config.Bind, &apiserver{})
+	log.Fatal(http.ListenAndServe(config.Bind, &apiserver{}))
 }

@@ -122,6 +122,71 @@ servicelist:
 |删除用户UID	|/deluid |service, mobile,uid |服务名称,手机号,用户id
 |信息查询|/info |service, mobile  |服务名称,手机号
 
+### SmsCode RestAPi 接口返回说明
+具体依据返回内容的结构体。
+以下是 mobcent结构体json内容
+
+#### 执行成功：
+```
+{
+  "rs": 1,
+  "errcode": "",
+  "body": {},
+  "head": {
+    "errCode": "000000",
+    "errInfo": "smscode调用成功,没有任何错",
+    "version": "2.7.0.3",
+    "alert": 0
+  }
+}
+```
+#### 执行失败：
+```
+{
+  "rs": 0,
+  "errcode": "[mobile]参数不对",
+  "body": {},
+  "head": {
+    "errCode": "900000",
+    "errInfo": "[mobile]参数不对",
+    "version": "2.7.0.3",
+    "alert": 0
+  }
+}
+```
+#### 信息查询返回：
+```
+{
+  "rs": 1,
+  "errcode": "",
+  "body": {
+    "info": {
+      "areacode": "0575",
+      "extinfo": {
+        "PhoneNum": "15336860197",
+        "Province": "浙江",
+        "City": "绍兴",
+        "ZipCode": "312000",
+        "AreaZone": "0575",
+        "CardType": "电信"
+      },
+      "lastsendtime": 0,
+      "mobile": "15336860197",
+      "sendnums": 0,
+      "service": "register",
+      "smscode": "",
+      "smscodeinvalidtime": 0,
+      "uid": ""
+    }
+  },
+  "head": {
+    "errCode": "000000",
+    "errInfo": "smscode调用成功,没有任何错",
+    "version": "2.7.0.3",
+    "alert": 0
+  }
+}
+```
 
 ### Callback 服务
 

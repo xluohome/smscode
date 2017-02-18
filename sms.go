@@ -62,8 +62,9 @@ func (sms *SMS) SetServiceConfig(serviceName string) *SMS {
 	sms.Config, sms.ConfigisOK = config.ServiceList[serviceName]
 	if sms.ConfigisOK {
 		sms.serviceName = serviceName
+		return sms
 	}
-	return sms
+	panic("服务" + serviceName + "配置不存在!")
 }
 
 //  归属地规则校验
@@ -139,8 +140,8 @@ func (sms *SMS) currModeok() error {
 	case 0x03:
 		return nil
 	}
-
-	return fmt.Errorf("请正确配置config中的mode参数")
+	//强制要求设置这个模式参数，有利于更加清楚服务调用者明确发送验证码与uid之间的关联性质
+	panic(fmt.Errorf("请正确配置对应服务中的mode参数"))
 }
 
 //保存数据
@@ -160,14 +161,15 @@ func (sms *SMS) save() {
 //发送短信
 func (sms *SMS) Send(mobile string) error {
 	if !sms.ConfigisOK {
-		return fmt.Errorf("(%s)服务配置不存在", sms.serviceName)
+		//强制要求明确服务参数配置
+		panic(fmt.Errorf("(%s)服务配置不存在", sms.serviceName))
 	}
+
 	if err := VailMobile(mobile); err != nil {
 		return err
 	}
 	/**
-	限制一个手机号只允许在一次send成功（失败）后再次send
-	为什么这么做？
+	同一时刻一个手机号只允许在一次send成功（失败）后再次操作
 	1：在高并发下保证一个手机号的send操作是同步的，后续规则校验可以依次进行；
 	2：同时保证高并发下的send性能；
 	**/
@@ -216,7 +218,7 @@ func (sms *SMS) Send(mobile string) error {
 
 func (sms *SMS) CheckCode(mobile, code string) error {
 	if !sms.ConfigisOK {
-		return fmt.Errorf("(%s)服务配置不存在", sms.serviceName)
+		panic(fmt.Errorf("(%s)服务配置不存在", sms.serviceName))
 	}
 
 	sms.Mobile = mobile
@@ -249,7 +251,7 @@ func (sms *SMS) CheckCode(mobile, code string) error {
 
 func (sms *SMS) SetUid(mobile, uid string) error {
 	if !sms.ConfigisOK {
-		return fmt.Errorf("(%s)服务配置不存在", sms.serviceName)
+		panic(fmt.Errorf("(%s)服务配置不存在", sms.serviceName))
 	}
 
 	sms.Mobile = mobile
@@ -270,7 +272,7 @@ func (sms *SMS) SetUid(mobile, uid string) error {
 
 func (sms *SMS) DelUid(mobile, uid string) error {
 	if !sms.ConfigisOK {
-		return fmt.Errorf("(%s)服务配置不存在", sms.serviceName)
+		panic(fmt.Errorf("(%s)服务配置不存在", sms.serviceName))
 	}
 
 	sms.Mobile = mobile
@@ -298,8 +300,9 @@ func (sms *SMS) DelUid(mobile, uid string) error {
 
 func (sms *SMS) Info(mobile string) (map[string]interface{}, error) {
 	if !sms.ConfigisOK {
-		return nil, fmt.Errorf("(%s)服务配置不存在", sms.serviceName)
+		panic(fmt.Errorf("(%s)服务配置不存在", sms.serviceName))
 	}
+
 	sms.Mobile = mobile
 
 	if err := VailMobile(sms.Mobile); err != nil {
@@ -311,7 +314,7 @@ func (sms *SMS) Info(mobile string) (map[string]interface{}, error) {
 	info["areacode"], _ = sms.model.GetMobileArea()
 	info["lastsendtime"], _ = sms.model.GetSendTime()
 	info["sendnums"], _ = sms.model.GetTodaySendNums()
-	info["smscode"], info["smscodevalidtime"], _ = sms.model.GetSmsCode()
+	info["smscode"], info["smscodeinvalidtime"], _ = sms.model.GetSmsCode()
 	info["extinfo"], _ = sms.model.GetMobileInfo()
 	info["uid"], _ = sms.model.GetSmsUid()
 	return info, nil

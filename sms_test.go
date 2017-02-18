@@ -18,60 +18,67 @@ func BenchmarkSendSms111(b *testing.B) {
 	}
 }
 
-func TestSendSmsok(t *testing.T) { //浙江省内号码
+var (
+	test_mobile  = "13575566313"
+	test_mobile2 = "13375566310"
+	test_code    = ""
+)
 
-	t.Log("【浙江省内号码  允许发送】")
+func TestCheckAreaOk(t *testing.T) {
+
 	sms := NewSms()
 	sms.SetServiceConfig("register")
-	if err := sms.Send("13575566313"); err != nil {
-
-		t.Fatal(err)
+	sms.Config.Allowcity = []string{"0575"}
+	sms.Mobile = "13575566310" //绍兴的手机号码
+	if err := sms.checkArea(); err != nil {
+		t.Error("归属地限制无效")
 	}
-
-	if err := sms.CheckCode(sms.Mobile, sms.Code); err != nil {
-
-		t.Fatal(err)
-	}
-
-	t.Log(sms.Mobile, sms.Code)
-
 }
 
-func TestSendSmsfaild(t *testing.T) { //浙江省外的号码
+func TestCheckAreaInvild(t *testing.T) {
 
-	t.Log("【浙江省外的号码 不允许发送】")
 	sms := NewSms()
 	sms.SetServiceConfig("register")
-	if err := sms.Send("15970772900"); err != nil {
-
-		t.Fatal(err)
+	sms.Config.Allowcity = []string{"0575"}
+	sms.Mobile = "13375566310" //不是绍兴的手机号码
+	if err := sms.checkArea(); err != nil {
+		t.Log(err)
+		return
 	}
-
-	if err := sms.CheckCode(sms.Mobile, sms.Code); err != nil {
-
-		t.Fatal(err)
-	}
-
-	t.Log(sms.Mobile, sms.Code)
+	t.Error("归属地限制无效")
 }
 
-func TestSendSmsfaild2(t *testing.T) { //不同的验证码服务, 因为签名相同 会触发 大鱼流控
-
-	t.Log("【不同的验证码服务, 因为签名相同会触发大鱼流控】")
+func TestSendSmsok(t *testing.T) {
 	sms := NewSms()
-	sms.SetServiceConfig("restpwd")
-	if err := sms.Send("13575566313"); err != nil {
-
-		t.Fatal(err)
+	sms.SetServiceConfig("register")
+	sms.Config.Allowcity = []string{"0575"}
+	if err := sms.Send(test_mobile); err != nil {
+		t.Error(err)
+		return
 	}
+	test_code = sms.Code
+	t.Run("CheckCode", testCheckCode)
+}
 
-	if err := sms.CheckCode(sms.Mobile, sms.Code); err != nil {
-
-		t.Fatal(err)
+func testCheckCode(t *testing.T) {
+	sms := NewSms()
+	sms.SetServiceConfig("register")
+	if err := sms.CheckCode(test_mobile, test_code); err != nil {
+		t.Error(err)
 	}
+}
 
-	t.Log(sms.Mobile, sms.Code)
+func TestSendSmsfaild(t *testing.T) { //绍兴外的号码
 
+	sms := NewSms()
+	sms.SetServiceConfig("register")
+	sms.Config.Allowcity = []string{"0575"}
+	if err := sms.Send(test_mobile2); err != nil {
+		t.Log(err)
+		return
+	}
+	t.Error("绍兴外的号码也能发送")
+	return
 }
 
 func TestSendSmsinfo(t *testing.T) { //手机验证码发送信息
