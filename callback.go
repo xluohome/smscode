@@ -16,7 +16,7 @@ type Callback struct {
 }
 
 var (
-	callback = make(chan Callback)
+	callback = make(chan *Callback)
 )
 
 func RunCallbackTask() {
@@ -37,14 +37,14 @@ func AddCallbackTask(sms *SMS, flag string) {
 	data.Set("service", sms.serviceName)
 	data.Set("uxtime", fmt.Sprintf("%d", sms.NowTime.Unix()))
 	data.Set("flag", flag)
-	callback <- Callback{sms.Config.Callback, data, 0}
+	callback <- &Callback{sms.Config.Callback, data, 0}
 }
 
-func (c Callback) Do(cbs <-chan Callback) {
+func (c *Callback) Do(cbs <-chan *Callback) {
 
 	for cb := range cbs {
 
-		go func() {
+		go func(cb *Callback) {
 			//延时 2,4,6,8,16,32,64,128 ... 秒
 			<-time.After(time.Duration(1<<cb.callnums) * time.Second)
 
@@ -70,7 +70,7 @@ func (c Callback) Do(cbs <-chan Callback) {
 
 			callback <- cb
 
-		}()
+		}(cb)
 
 	}
 }

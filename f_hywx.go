@@ -44,7 +44,7 @@ func (h *Hywx) Send(sms *SMS) error {
 	}
 
 	if h.Code != 2 {
-		log.Error("%v", h)
+		log.Errorf("%v", h)
 		return fmt.Errorf("%s", h.Msg)
 	}
 
