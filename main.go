@@ -30,7 +30,6 @@ func init() {
 		os.Exit(1)
 	}
 
-	os.Setenv("ZONEINFO", "conf/zoneinfo.zip")
 	time.Local = func() *time.Location {
 		loc, err := time.LoadLocation(config.Timezone)
 		if err != nil {

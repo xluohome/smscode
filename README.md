@@ -44,7 +44,7 @@ timezone 具体值请查考 conf/zoneinfo.zip
  - 0x03：不管uid是否存在都发送。
 7. 通过setuid接口可将现有系统中的用户UID数据导入SmsCode;
 8. 内置本地持久化存储：Goleveldb;
-9. 支持Docker部署，SmsCode静态编译(Go 1.7.5)Docker image不到8mb(不含归属地数据库);
+9. 支持Docker部署，SmsCode静态编译(Go 1.7.5)Docker image不到12mb(含归属地数据库);
 
 ### 配置文件 conf/conf.yaml
 
