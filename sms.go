@@ -3,11 +3,10 @@ package main
 import (
 	"fmt"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
-	log "github.com/golang/glog"
+	//log "github.com/golang/glog"
 )
 
 type Sender interface {
@@ -18,24 +17,19 @@ func sendcode(sms *SMS) error {
 	var s Sender
 	switch vendor := sms.Config.Vendor; vendor {
 	case "alidayu":
-		s = &Alidayu{sms: sms}
+		s = &Alidayu{}
 	case "yuntongxun":
-		s = &Yuntongxun{sms: sms}
+		s = &Yuntongxun{}
 	case "hywx":
-		s = &Hywx{sms: sms}
+		s = &Hywx{}
 	case "demo":
-		s = &Demov{sms: sms}
+		s = &Demov{}
 	default:
-		log.Warning("设置的短信服务商有误")
-		return fmt.Errorf("%s", "短信通道设置不正确")
+		//强制要求设置Config.Vendor这个参数
+		panic("设置的短信服务商有误")
 	}
 	return s.Send(sms)
 }
-
-var (
-	smap   = make(map[string]bool)
-	smsmut sync.Mutex
-)
 
 type SMS struct {
 	Mobile      string
@@ -57,13 +51,12 @@ func NewSms() *SMS {
 
 //设置服务配置文件
 func (sms *SMS) SetServiceConfig(serviceName string) *SMS {
-	smsmut.Lock()
-	defer smsmut.Unlock()
 	sms.Config, sms.ConfigisOK = config.ServiceList[serviceName]
 	if sms.ConfigisOK {
 		sms.serviceName = serviceName
 		return sms
 	}
+	//强制要求设置serviceName这个参数
 	panic("服务" + serviceName + "配置不存在!")
 }
 
@@ -140,7 +133,7 @@ func (sms *SMS) currModeok() error {
 	case 0x03:
 		return nil
 	}
-	//强制要求设置这个模式参数，有利于更加清楚服务调用者明确发送验证码与uid之间的关联性质
+	//强制要求设置这个模式参数，有利于更加清楚服务调用者明确发送验证码与uid之间的关联
 	panic(fmt.Errorf("请正确配置对应服务中的mode参数"))
 }
 
@@ -159,6 +152,7 @@ func (sms *SMS) save() {
 }
 
 //发送短信
+//需保证在高并发下同一个手机号相同短信服务send操作是同步的，确保后续规则校验可以依次进行；
 func (sms *SMS) Send(mobile string) error {
 	if !sms.ConfigisOK {
 		//强制要求明确服务参数配置
@@ -168,25 +162,6 @@ func (sms *SMS) Send(mobile string) error {
 	if err := VailMobile(mobile); err != nil {
 		return err
 	}
-	/**
-	同一时刻一个手机号只允许在一次send成功（失败）后再次操作
-	1：在高并发下保证一个手机号的send操作是同步的，后续规则校验可以依次进行；
-	2：同时保证高并发下的send性能；
-	**/
-	smsmut.Lock()
-	if _, ok := smap[mobile]; ok {
-		smsmut.Unlock()
-		return fmt.Errorf("服务器忙请稍后再试...")
-	}
-	smap[mobile] = true
-	smsmut.Unlock()
-
-	//send返回后取消限制
-	defer func() {
-		smsmut.Lock()
-		delete(smap, mobile)
-		smsmut.Unlock()
-	}()
 
 	sms.Mobile = mobile
 	sms.Code = makeCode()

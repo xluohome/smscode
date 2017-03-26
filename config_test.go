@@ -10,7 +10,7 @@ func TestGetConfig(t *testing.T) {
 
 	var conf Config
 
-	err := conf.ParseConfigFile("etc/conf.yaml")
+	err := conf.ParseConfigFile("conf/conf.yaml")
 
 	if err != nil {
 

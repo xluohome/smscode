@@ -8,7 +8,13 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/spaolacci/murmur3"
 )
+
+func hashFunc(data []byte) uint64 {
+	return murmur3.Sum64(data)
+}
 
 //生成验证码
 func makeCode() (code string) {

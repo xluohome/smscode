@@ -21,29 +21,37 @@ SmsCode
 
 	./build  && ./smscode
 
-### Docker 部署Smscode
+### Docker部署
 
 请参考项目中的Dockerfile 制作Docker image。
+
+### 时区设置
+
+请修改 conf.yaml 中的 timezone 参数。
+
+timezone 具体值请查考 conf/zoneinfo.zip
 
 ### 功能特性
 
 1. 支持阿里大鱼、云通讯等多个“手机短信验证码”(以下简称：验证码)通道;
 2. 自定义多个验证码服务接口，如：新用户注册，重设密码，身份验证等等;
-3. 内置手机号归属地限制，可限制指定归属地手机号接收验证码;
-4. 每个验证码服务可设置验证码每日发送数量限额及失效时间;
-5. 内置callback服务，可设置验证码发送成功（失败）、验证码验证成功时的回调URL;
+3. 内置手机号归属地限制，限制指定归属地手机号可接收验证码;
+4. 每个验证码服务可设置“验证码”每日最大发送数量限额及有效时间;
+5. 内置callback服务，可设置验证码发送成功（失败）、验证码验证成功时的回调http Url;
 6. 可设置验证码发送模式:
  - 0x01：只有手机号对应的uid存在时才能发送。
  - 0x02：只有uid不存在时才能发送。
  - 0x03：不管uid是否存在都发送。
 7. 通过setuid接口可将现有系统中的用户UID数据导入SmsCode;
-8. 内置持久化存储：Goleveldb;
+8. 内置本地持久化存储：Goleveldb;
 9. 支持Docker部署，SmsCode静态编译(Go 1.7.5)Docker image不到8mb(不含归属地数据库);
 
-### 配置文件 etc/conf.yaml
+### 配置文件 conf/conf.yaml
 
 ```
 bind: 0.0.0.0:8080  #短信验证码微服务器地址
+timezone: PRC   #时区设置
+timeout: 5 #短信供应商网关响应超时时间（秒）
 vendors:
   alidayu: #阿里大鱼配置 http://www.alidayu.com
     appkey: 20315570
@@ -190,13 +198,13 @@ servicelist:
 
 ### Callback 服务
 
-每个短信验证码服务允许设置一个callback Url ；
-如下事件发生时将回调callback Url
+每个短信验证码服务允许设置一个callback http Url ；
+如下事件发生时将回调callback http Url
 
 1. 手机验证码发送成功或者失败时。
 2. 手机验证码通过验证时。
 
-当 callback Url无法访问时，系统会延时2,4,6,8,16,32,64,128秒 依次进行重试（合计10次）。
+当 callback http Url无法访问时，系统会延时2,4,6,8,16,32,64,128秒 依次进行重试（合计10次）。
 
 成功时附带如下Url POST请求参数(multipart/form-data)：
 ```

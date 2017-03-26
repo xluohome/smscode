@@ -2,12 +2,15 @@ package main
 
 import (
 	"io/ioutil"
+	"time"
 
 	"gopkg.in/yaml.v2"
 )
 
 type Config struct {
 	Bind        string                       `yaml:"bind"`
+	Timezone    string                       `yaml:"timezone"`
+	TimeOut     time.Duration                `yaml:"timeout"`
 	Vendors     map[string]map[string]string `yaml:"vendors"`
 	Juheapikey  string                       `yaml:"juheapikey"`
 	ServiceList map[string]*ServiceConfig    `yaml:"servicelist"`
