@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"testing"
+	"time"
 )
 
 func TestApiserver(t *testing.T) {
@@ -12,8 +13,16 @@ func TestApiserver(t *testing.T) {
 	if e := recover(); e != nil {
 		t.Error(e)
 	}
-
 	config.Bind = "0.0.0.0:8080"
+	//3秒超时
+	config.TimeOut = 6 * time.Second
+	config.ServiceList["register"].Vendor = "demo"
+	config.ServiceList["register"].Group = "db1"
+	config.ServiceList["register"].Allowcity = []string{"0575", "0571"}
+	config.ServiceList["register"].MaxSendNums = 10
+	config.ServiceList["register"].Mode = 2
+	config.ServiceList["register"].Validtime = 500
+	config.ServiceList["register"].Outformat = "default"
 	go func() {
 		Apiserver()
 	}()

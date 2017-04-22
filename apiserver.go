@@ -9,18 +9,19 @@ import (
 	log "github.com/golang/glog"
 )
 
-type apiserver struct {
-	req    []chan *request
-	result []chan Result
-}
-
 type request struct {
 	Act, Mobile, Code, Service, Uid string `json:",omitempty"`
+	result                          chan Result
 }
 
 func (r *request) String() string {
 	return fmt.Sprintf("%s\t%s\t%s\t%s\t%s", r.Act, r.Mobile, r.Code, r.Service, r.Uid)
 }
+
+type apiserver struct {
+	req []chan *request
+}
+
 func (api *apiserver) sms(i int) {
 
 	var (
@@ -59,7 +60,7 @@ func (api *apiserver) sms(i int) {
 		}
 
 		result.Format(err, infos)
-		api.result[i] <- result
+		req.result <- result
 	}
 	return
 }
@@ -74,30 +75,35 @@ func (api *apiserver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	req := request{r.URL.String()[1:], r.FormValue("mobile"), r.FormValue("code"), r.FormValue("service"), r.FormValue("uid")}
+	resultchan := make(chan Result)
+	req := &request{r.URL.String()[1:], r.FormValue("mobile"), r.FormValue("code"), r.FormValue("service"), r.FormValue("uid"), resultchan}
 	hash := hashFunc([]byte(req.String())) & uint64(*smsworks-1)
-	api.req[hash] <- &req
 
-	var result Result
-	select {
-	case result = <-api.result[hash]:
-	case <-time.After(config.TimeOut * time.Second):
-		panic("Response timeout error!")
+	for {
+		select {
+		case api.req[hash] <- req:
+		case result := <-resultchan:
+			w.Header().Set("Content-Type", ContentType)
+			w.Header().Set("TimeZone", time.Local.String())
+			str, _ := json.Marshal(result)
+			w.Write(str)
+			return
+
+			//未在预定时间内完成请求或者接收答复则报超时错误
+			//如果设置的smsworks过少时，当大量的并发请求因处理量受限无法及时处理。会使得请求或接受时间延长导致超时；
+			//另外网络不稳定或短信供应商通道出现了问题也会引起超时。
+		case <-time.After(config.TimeOut):
+			panic("Server timeout error!")
+		}
 	}
-	w.Header().Set("Content-Type", ContentType)
-	w.Header().Set("TimeZone", time.Local.String())
-	str, _ := json.Marshal(result)
-	w.Write(str)
 }
 
 func Apiserver() {
 	var api = new(apiserver)
 	api.req = make([]chan *request, *smsworks)
-	api.result = make([]chan Result, *smsworks)
 	for i := 0; i < *smsworks; i++ {
 		go func(i int) {
 			api.req[i] = make(chan *request)
-			api.result[i] = make(chan Result)
 			api.sms(i)
 		}(i)
 	}

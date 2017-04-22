@@ -10,10 +10,10 @@ import (
 
 var (
 	config          Config
-	configFile      = flag.String("c", "conf/conf.yaml", "配置文件,default:conf/conf.yaml")
+	configFile      = flag.String("c", "conf/conf.yaml", "配置文件")
 	dbPath          = flag.String("db", "level.db", "数据库保存路径")
-	smsworks        = flag.Int("sw", runtime.NumCPU(), "短信验证码服务器数量,default:cpu number")
-	callbackworkers = flag.Int("cw", runtime.NumCPU(), "Callback并发数,default:cpu number")
+	smsworks        = flag.Int("sw", runtime.NumCPU(), "短信验证码服务器数量")
+	callbackworkers = flag.Int("cw", runtime.NumCPU(), "Callback并发数")
 	trycallnums     = flag.Uint("cn", 10, "Callback失败重试次数")
 )
 
