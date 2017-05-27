@@ -92,13 +92,14 @@ func (api *apiserver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			//未在预定时间内完成请求或者接收答复则报超时错误
 			//如果设置的smsworks过少时，当大量的并发请求因处理量受限无法及时处理。会使得请求或接受时间延长导致超时；
 			//另外网络不稳定或短信供应商通道出现了问题也会引起超时。
-		case <-time.After(config.TimeOut):
+		case <-time.After(config.TimeOut * time.Second):
 			panic("Server timeout error!")
 		}
 	}
 }
 
 func Apiserver() {
+
 	var api = new(apiserver)
 	api.req = make([]chan *request, *smsworks)
 	for i := 0; i < *smsworks; i++ {

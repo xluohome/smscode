@@ -10,6 +10,12 @@ type Demov struct {
 	sms *SMS
 }
 
+func init() {
+	SenderMap["demo"] = func() Sender {
+		return &Demov{}
+	}
+}
+
 func (y *Demov) Send(sms *SMS) error {
 
 	time.Sleep(5 * time.Second)

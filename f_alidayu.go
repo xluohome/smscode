@@ -11,6 +11,12 @@ type Alidayu struct {
 	sms *SMS
 }
 
+func init() {
+	SenderMap["alidayu"] = func() Sender {
+		return &Alidayu{}
+	}
+}
+
 /**
 阿里大鱼 业务流控触发 条件：
 

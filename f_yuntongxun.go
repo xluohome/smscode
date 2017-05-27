@@ -18,6 +18,12 @@ type Yuntongxun struct {
 	sms *SMS
 }
 
+func init() {
+	SenderMap["yuntongxun"] = func() Sender {
+		return &Yuntongxun{}
+	}
+}
+
 type formdata struct {
 	To         string   `json:"to"`
 	TemplateId string   `json:"templateId"`

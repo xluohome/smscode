@@ -13,22 +13,15 @@ type Sender interface {
 	Send(sms *SMS) error
 }
 
+var SenderMap = make(map[string]func() Sender)
+
 func sendcode(sms *SMS) error {
-	var s Sender
-	switch vendor := sms.Config.Vendor; vendor {
-	case "alidayu":
-		s = &Alidayu{}
-	case "yuntongxun":
-		s = &Yuntongxun{}
-	case "hywx":
-		s = &Hywx{}
-	case "demo":
-		s = &Demov{}
-	default:
-		//强制要求设置Config.Vendor这个参数
-		panic("设置的短信服务商有误")
+	vendor := sms.Config.Vendor
+	if s, ok := SenderMap[vendor]; ok {
+		return s().Send(sms)
 	}
-	return s.Send(sms)
+	//强制要求设置Config.Vendor这个参数
+	panic("设置的短信服务商有误")
 }
 
 type SMS struct {

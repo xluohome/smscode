@@ -22,6 +22,12 @@ type Hywx struct {
 	Msg     string   `xml:"msg"`
 }
 
+func init() {
+	SenderMap["hywx"] = func() Sender {
+		return &Hywx{}
+	}
+}
+
 func (h *Hywx) Send(sms *SMS) error {
 	h.sms = sms
 	var data = make(url.Values)

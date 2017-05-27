@@ -3,7 +3,7 @@ SmsCode
 
 ### 这是什么
 
-  专门为需要【手机短信验证码】使用场景而设计的微服务(Micro service)，如：用户注册、找回密码、用户身份验证、验证码登录等等。
+  专为需要【手机短信验证码】使用场景而设计的微服务(Micro service)，如：用户注册、找回密码、用户身份验证、验证码登录等等。
 
 ### 为什么要造这个轮子
 
@@ -20,6 +20,10 @@ SmsCode
 	cd  $GOPATH/src/github.com/xluohome/smscode
 
 	./build  && ./smscode
+	
+### 运行参数设置
+
+请参考 ./smscode.exe -help  
 
 ### Docker部署
 
