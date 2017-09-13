@@ -76,7 +76,7 @@ func (api *apiserver) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	resultchan := make(chan Result)
-	req := &request{r.URL.String()[1:], r.FormValue("mobile"), r.FormValue("code"), r.FormValue("service"), r.FormValue("uid"), resultchan}
+	req := &request{r.URL.Path[1:], r.FormValue("mobile"), r.FormValue("code"), r.FormValue("service"), r.FormValue("uid"), resultchan}
 	hash := hashFunc([]byte(req.String())) & uint64(*smsworks-1)
 
 	for {
