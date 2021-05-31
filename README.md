@@ -9,6 +9,13 @@ SmsCode
 
 首先我没有找到已实现这些基本功能合一的轮子，至少开源的没有。而实际上我们很多项目开发时经常需要用到手机验证码功能。然而每次重复造轮子又觉得太繁琐且不容易集中控制。于是有了开发一个可复用轮子的想法。那么合计不到1500行Go代码实现这个可复用的手机验证码微服务何乐不为呢？
 
+### go modules
+
+在 smscode 目录下执行以下命令：
+```bash
+go mod tidy
+```
+
 ### 安装使用
 
 得益于Go语言的跨平台支持，SmsCode可安装在所有主流OS上（Linux，Mac OS X，FreeBSD，Windows，ARM等）
@@ -221,7 +228,7 @@ flag  string #回调标记 (Success,Failed,Checkok)
 ````
 
 ### 联系作者
-欢迎来信交流
-phposs@qq.com ，
-QQ群
-309020981
+
+加作者微信
+
+![wx.jpg](https://ucc.alicdn.com/pic/developer-ecology/f41fd688affb41fc8853c4f99abd3d45.jpg)
