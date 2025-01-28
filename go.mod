@@ -3,7 +3,7 @@ module github.com/xluohome/smscode
 go 1.16
 
 require (
-	github.com/golang/glog v0.0.0-20210429001901-424d2337a529
+	github.com/golang/glog v1.2.4
 	github.com/issue9/assert v1.4.1
 	github.com/opensource-conet/alidayu v0.0.0-20160504013805-9c045758d571
 	github.com/spaolacci/murmur3 v1.1.0
